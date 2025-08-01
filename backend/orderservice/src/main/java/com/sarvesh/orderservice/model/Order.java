@@ -9,7 +9,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 /**
  * Represents an Order stored in the DynamoDB "orders" table.
  */
-@DynamoDBTable(tableName = "orders")
+@DynamoDBTable(tableName = "Orders")
 public class Order {
 
     private String orderId;
@@ -19,7 +19,7 @@ public class Order {
     private Date createdAt;
 
     /**
-     * Primary key for the Order item in DynamoDB.
+     * Gets the primary key for the Order item in DynamoDB.
      * 
      * @return the order ID
      */
@@ -33,7 +33,7 @@ public class Order {
     }
 
     /**
-     * Name of the customer who placed the order.
+     * Gets the name of the customer who placed the order.
      * 
      * @return the customer's name
      */
@@ -47,7 +47,7 @@ public class Order {
     }
 
     /**
-     * Total amount for the order.
+     * Gets the total amount for the order.
      * 
      * @return the order amount
      */
@@ -61,7 +61,7 @@ public class Order {
     }
 
     /**
-     * URL pointing to the invoice (likely stored in S3).
+     * Gets the URL pointing to the invoice (likely stored in S3).
      * 
      * @return the invoice URL
      */
@@ -75,7 +75,7 @@ public class Order {
     }
 
     /**
-     * Timestamp indicating when the order was created.
+     * Gets the timestamp indicating when the order was created.
      * 
      * @return the creation date
      */
@@ -86,5 +86,19 @@ public class Order {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    /**
+     * Returns a string representation of the order.
+     */
+    @Override
+    public String toString() {
+        return "Order{" +
+               "orderId='" + orderId + '\'' +
+               ", customerName='" + customerName + '\'' +
+               ", amount=" + amount +
+               ", invoiceUrl='" + invoiceUrl + '\'' +
+               ", createdAt=" + createdAt +
+               '}';
     }
 }

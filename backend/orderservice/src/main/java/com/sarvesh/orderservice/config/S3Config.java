@@ -33,9 +33,9 @@ public class S3Config {
                 )
                 .serviceConfiguration(
                         S3Configuration.builder()
-                                .pathStyleAccessEnabled(true) // Required for LocalStack
+                                .pathStyleAccessEnabled(true)
                                 .build()
                 )
-                .build();
+                .build(); 
     }
 }

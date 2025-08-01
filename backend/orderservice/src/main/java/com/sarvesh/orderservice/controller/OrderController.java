@@ -1,5 +1,7 @@
 package com.sarvesh.orderservice.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import com.sarvesh.orderservice.service.S3Service;
 @RequestMapping("/orders")
 public class OrderController {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
+
     private final OrderService orderService;
     private final S3Service s3Service;
 
@@ -31,15 +35,14 @@ public class OrderController {
      * Create a new order
      */
     @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody Order order) {
+    public ResponseEntity<Order> createOrder(@RequestBody Order order) {
         try {
-            System.out.println("Received Order: " + order);
+            logger.info("Received new order request: {}", order);
             Order savedOrder = orderService.createOrder(order);
-            return ResponseEntity.ok(savedOrder);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedOrder);
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to create order: " + e.getMessage());
+            logger.error("Error while creating order", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -48,9 +51,13 @@ public class OrderController {
      */
     @GetMapping("/{orderId}")
     public ResponseEntity<Order> getOrderById(@PathVariable String orderId) {
+        logger.info("Fetching order with ID: {}", orderId);
         return orderService.getOrderById(orderId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+                .map(order -> ResponseEntity.ok().body(order))
+                .orElseGet(() -> {
+                    logger.warn("Order with ID {} not found", orderId);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                });
     }
 
     /**
@@ -59,10 +66,11 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<Iterable<Order>> getAllOrders() {
         try {
+            logger.info("Fetching all orders");
             Iterable<Order> orders = orderService.getAllOrders();
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error while fetching orders", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -72,12 +80,13 @@ public class OrderController {
      */
     @GetMapping("/test-s3")
     public ResponseEntity<String> testS3Integration() {
+        String bucketName = "my-test-bucket";
         try {
-            String bucketName = "my-test-bucket";
+            logger.info("Testing S3 bucket: {}", bucketName);
             s3Service.createBucketIfNotExists(bucketName);
             return ResponseEntity.ok("S3 bucket '" + bucketName + "' is ready!");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("S3 integration test failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("S3 bucket test failed: " + e.getMessage());
         }

@@ -1,9 +1,13 @@
 package com.example.orderservice.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,31 +23,59 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 @RequestMapping("/api/s3")
 public class UploadController {
 
-    @Autowired
-    private S3Client s3Client;
+    private static final Logger logger = LoggerFactory.getLogger(UploadController.class);
 
-    private final String BUCKET_NAME = "local-bucket"; // This must match the bucket name you created
+    private final S3Client s3Client;
+
+    @Value("${aws.s3.bucket-name}")
+    private String bucketName;
+
+    public UploadController(S3Client s3Client) {
+        this.s3Client = s3Client;
+    }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("File is empty or missing");
+    public ResponseEntity<Map<String, Object>> uploadFile(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (file.isEmpty() || file.getOriginalFilename() == null) {
+            response.put("success", false);
+            response.put("message", "📂 File is empty or filename is missing");
+            return ResponseEntity.badRequest().body(response);
         }
 
         try {
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(BUCKET_NAME)
+                    .bucket(bucketName)
                     .key(fileName)
                     .contentType(file.getContentType())
                     .build();
 
-            s3Client.putObject(putObjectRequest, software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes()));
+            s3Client.putObject(
+                putObjectRequest,
+                software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes())
+            );
 
-            return ResponseEntity.ok("✅ File uploaded successfully with name: " + fileName);
+            logger.info("✅ Uploaded file: {} to bucket: {}", fileName, bucketName);
+
+            response.put("success", true);
+            response.put("message", "File uploaded successfully");
+            response.put("fileName", fileName);
+            response.put("bucket", bucketName);
+            return ResponseEntity.ok(response);
+
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("❌ Error: " + e.getMessage());
+            logger.error("❌ IO Exception while uploading file", e);
+            response.put("success", false);
+            response.put("message", "Error while reading file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        } catch (Exception e) {
+            logger.error("❌ Unexpected error during upload", e);
+            response.put("success", false);
+            response.put("message", "Unexpected error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 }

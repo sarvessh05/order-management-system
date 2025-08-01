@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,13 +16,12 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.*;
 
 @Service
 public class S3Service {
+
+    private static final Logger logger = LoggerFactory.getLogger(S3Service.class);
 
     private S3Client s3Client;
 
@@ -35,30 +36,58 @@ public class S3Service {
 
     @PostConstruct
     public void init() {
-        this.s3Client = S3Client.builder()
-                .endpointOverride(URI.create(endpoint))
-                .region(Region.of(region))
-                .credentialsProvider(
-                        StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test"))
-                )
-                .build();
+        try {
+            logger.info("Initializing S3 client for region '{}' and endpoint '{}'", region, endpoint);
+
+            this.s3Client = S3Client.builder()
+                    .endpointOverride(URI.create(endpoint))
+                    .region(Region.of(region))
+                    .credentialsProvider(
+                            StaticCredentialsProvider.create(
+                                    AwsBasicCredentials.create("test", "test")
+                            )
+                    )
+                    .build();
+
+            createBucketIfNotExists(bucketName);
+        } catch (Exception e) {
+            logger.error("Failed to initialize S3 client: {}", e.getMessage(), e);
+            throw new RuntimeException("S3 client initialization failed", e);
+        }
     }
 
     public void createBucketIfNotExists(String bucketName) {
         try {
             s3Client.headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
-        } catch (S3Exception e) {
-            if (e.statusCode() == 404) {
-                s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
+            logger.debug("Bucket '{}' already exists", bucketName);
+        } catch (NoSuchBucketException | S3Exception e) {
+            if (e instanceof NoSuchBucketException || e.statusCode() == 404) {
+                logger.warn("Bucket '{}' not found. Creating new one...", bucketName);
+                try {
+                    s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
+                    logger.info("Bucket '{}' created successfully.", bucketName);
+                } catch (S3Exception createEx) {
+                    logger.error("Failed to create bucket '{}': {}", bucketName, createEx.awsErrorDetails().errorMessage(), createEx);
+                    throw createEx;
+                }
             } else {
+                logger.error("Error checking bucket '{}': {}", bucketName, e.awsErrorDetails().errorMessage(), e);
                 throw e;
             }
         }
     }
 
     public String uploadFile(MultipartFile file) throws IOException {
-        createBucketIfNotExists(bucketName);
-        String key = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File must not be null or empty");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new IllegalArgumentException("File must have a valid name");
+        }
+
+        String key = UUID.randomUUID() + "_" + originalFilename;
 
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -66,7 +95,13 @@ public class S3Service {
                 .contentType(file.getContentType())
                 .build();
 
-        s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
+        try {
+            s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
+            logger.info("File '{}' uploaded successfully to bucket '{}' with key '{}'", originalFilename, bucketName, key);
+        } catch (S3Exception e) {
+            logger.error("Failed to upload file '{}' to bucket '{}': {}", originalFilename, bucketName, e.awsErrorDetails().errorMessage(), e);
+            throw new IOException("S3 upload failed", e);
+        }
 
         return key;
     }
