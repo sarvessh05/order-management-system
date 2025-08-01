@@ -1,7 +1,5 @@
 package com.sarvesh.orderservice.controller;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,36 +18,44 @@ import com.sarvesh.orderservice.service.S3Service;
 @RequestMapping("/orders")
 public class OrderController {
 
-    @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
+    private final S3Service s3Service;
 
     @Autowired
-    private S3Service s3Service;
+    public OrderController(OrderService orderService, S3Service s3Service) {
+        this.orderService = orderService;
+        this.s3Service = s3Service;
+    }
 
-    // Create a new order
+    /**
+     * Create a new order
+     */
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody Order order) {
         try {
-            System.out.println("Received Order: " + order); // Debug log
+            System.out.println("Received Order: " + order);
             Order savedOrder = orderService.createOrder(order);
             return ResponseEntity.ok(savedOrder);
         } catch (Exception e) {
-            e.printStackTrace(); // Detailed error logging
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to create order: " + e.getMessage());
         }
     }
 
-    // Get order by ID
+    /**
+     * Retrieve order by ID
+     */
     @GetMapping("/{orderId}")
     public ResponseEntity<Order> getOrderById(@PathVariable String orderId) {
-        Optional<Order> order = orderService.getOrderById(orderId);
-        return order.map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+        return orderService.getOrderById(orderId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    // Get all orders
+    /**
+     * Retrieve all orders
+     */
     @GetMapping
     public ResponseEntity<Iterable<Order>> getAllOrders() {
         try {
@@ -57,13 +63,13 @@ public class OrderController {
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    // Test S3 bucket integration
+    /**
+     * Test S3 bucket integration
+     */
     @GetMapping("/test-s3")
     public ResponseEntity<String> testS3Integration() {
         try {
@@ -72,9 +78,8 @@ public class OrderController {
             return ResponseEntity.ok("S3 bucket '" + bucketName + "' is ready!");
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to create or access S3 bucket: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("S3 bucket test failed: " + e.getMessage());
         }
     }
 }

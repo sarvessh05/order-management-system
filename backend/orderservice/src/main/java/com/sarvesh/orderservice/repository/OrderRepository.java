@@ -1,10 +1,11 @@
 package com.sarvesh.orderservice.repository;
 
-import com.sarvesh.orderservice.model.Order;
 import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
 import org.springframework.data.repository.CrudRepository;
 
+import com.sarvesh.orderservice.model.Order;
+
 @EnableScan
 public interface OrderRepository extends CrudRepository<Order, String> {
-    // You can add: List<Order> findByCustomerName(String name); later if needed
+    // Custom queries can go here
 }
