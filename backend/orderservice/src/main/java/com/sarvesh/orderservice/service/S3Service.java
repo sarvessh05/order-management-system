@@ -16,13 +16,16 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
 public class S3Service {
 
     private static final Logger logger = LoggerFactory.getLogger(S3Service.class);
-
     private S3Client s3Client;
 
     @Value("${aws.region}")
@@ -47,6 +50,11 @@ public class S3Service {
                                     AwsBasicCredentials.create("test", "test")
                             )
                     )
+                    .serviceConfiguration(
+                            S3Configuration.builder()
+                                    .pathStyleAccessEnabled(true)
+                                    .build()
+                    )
                     .build();
 
             createBucketIfNotExists(bucketName);
@@ -60,8 +68,8 @@ public class S3Service {
         try {
             s3Client.headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
             logger.debug("Bucket '{}' already exists", bucketName);
-        } catch (NoSuchBucketException | S3Exception e) {
-            if (e instanceof NoSuchBucketException || e.statusCode() == 404) {
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
                 logger.warn("Bucket '{}' not found. Creating new one...", bucketName);
                 try {
                     s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());

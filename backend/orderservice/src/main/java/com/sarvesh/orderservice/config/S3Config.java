@@ -15,27 +15,27 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 @Configuration
 public class S3Config {
 
-    @Value("${aws.region}")
-    private String region;
-
     @Value("${aws.s3.endpoint}")
-    private String endpoint;
+    private String s3Endpoint;
+
+    @Value("${aws.region}")
+    private String awsRegion;
 
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()
-                .endpointOverride(URI.create(endpoint)) // LocalStack S3 endpoint
-                .region(Region.of(region))              // e.g., us-east-1
+                .endpointOverride(URI.create(s3Endpoint)) // e.g., http://localhost:4566
+                .region(Region.of(awsRegion))             // e.g., ap-south-1
                 .credentialsProvider(
                         StaticCredentialsProvider.create(
-                                AwsBasicCredentials.create("test", "test") // Dummy credentials for LocalStack
+                                AwsBasicCredentials.create("test", "test") // Dummy creds for LocalStack
                         )
                 )
                 .serviceConfiguration(
                         S3Configuration.builder()
-                                .pathStyleAccessEnabled(true)
+                                .pathStyleAccessEnabled(true) // REQUIRED for LocalStack
                                 .build()
                 )
-                .build(); 
+                .build();
     }
 }

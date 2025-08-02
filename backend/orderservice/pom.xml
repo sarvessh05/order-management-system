@@ -2,10 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- 🔼 Inherit Spring Boot 3.2.4 defaults -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -20,6 +21,7 @@
     <description>A real-time order management backend</description>
     <url>https://github.com/sarvessh05/orderservice</url>
 
+    <!-- 📄 License & Developer Info -->
     <licenses>
         <license>
             <name>MIT License</name>
@@ -44,9 +46,11 @@
     </scm>
 
     <properties>
+        <!-- ☕ Using Java 21 -->
         <java.version>21</java.version>
     </properties>
 
+    <!-- 🔁 JitPack for community dependencies like spring-data-dynamodb -->
     <repositories>
         <repository>
             <id>jitpack.io</id>
@@ -54,6 +58,7 @@
         </repository>
     </repositories>
 
+    <!-- 📦 AWS SDK BOM for consistent SDK v2 versions -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -67,47 +72,61 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- Spring Boot Web -->
+        <!-- 🚀 Web API Support -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring Boot Test -->
+        <!-- ✅ Spring Boot Core Starter (used for application context, config, etc.) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+            <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- AWS SDK for S3 -->
+        <!-- 📦 AWS SDK v2 - S3 -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
         </dependency>
 
-        <!-- AWS SDK for DynamoDB v1 -->
+        <!-- 📦 AWS SDK v2 - DynamoDB -->
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-dynamodb</artifactId>
-            <version>1.12.776</version>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>dynamodb</artifactId>
         </dependency>
 
-        <!-- Spring Data DynamoDB -->
+        <!-- 💾 Spring Data DynamoDB (Community maintained) -->
         <dependency>
             <groupId>com.github.derjust</groupId>
             <artifactId>spring-data-dynamodb</artifactId>
             <version>5.1.0</version>
         </dependency>
 
-        <!-- Jakarta Annotations -->
+        <!-- ✅ Jakarta Annotation API -->
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
             <version>2.1.1</version>
         </dependency>
+
+        <!-- 🧪 Testing: Spring Boot Starter Test (includes JUnit Jupiter, Mockito, etc.) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 🧪 Optional: JUnit Jupiter (explicit if you want separate control) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
+    <!-- 🔨 Spring Boot Plugin for building executable jars -->
     <build>
         <plugins>
             <plugin>
@@ -116,5 +135,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
