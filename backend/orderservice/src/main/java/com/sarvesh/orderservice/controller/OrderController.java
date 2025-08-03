@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.sarvesh.orderservice.model.Order;
 import com.sarvesh.orderservice.service.OrderService;
@@ -32,7 +34,7 @@ public class OrderController {
     }
 
     /**
-     * Create a new order
+     * Create a new order using plain JSON (no file upload)
      */
     @PostMapping
     public ResponseEntity<Order> createOrder(@RequestBody Order order) {
@@ -47,7 +49,37 @@ public class OrderController {
     }
 
     /**
-     * Retrieve order by ID
+     * Create a new order with optional invoice file upload.
+     * Endpoint: POST /orders/upload
+     * Content-Type: multipart/form-data
+     */
+    @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    public ResponseEntity<Order> createOrderWithInvoice(
+            @RequestPart("order") Order order,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+
+        try {
+            // Handle optional file upload
+            if (file != null && !file.isEmpty()) {
+                String s3Key = s3Service.uploadFile(file);
+                String invoiceUrl = "https://s3.localhost.localstack.cloud:4566/my-local-bucket/" + s3Key;
+                order.setInvoiceUrl(invoiceUrl);
+                logger.info("Invoice uploaded. S3 Key: {}, URL: {}", s3Key, invoiceUrl);
+            }
+
+            // Save order to DynamoDB
+            Order savedOrder = orderService.createOrder(order);
+            logger.info("Order created successfully: {}", savedOrder.getOrderId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedOrder);
+
+        } catch (Exception e) {
+            logger.error("Error while creating order with invoice", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    /**
+     * Get a single order by ID
      */
     @GetMapping("/{orderId}")
     public ResponseEntity<Order> getOrderById(@PathVariable String orderId) {
@@ -61,7 +93,7 @@ public class OrderController {
     }
 
     /**
-     * Retrieve all orders
+     * Get all orders
      */
     @GetMapping
     public ResponseEntity<Iterable<Order>> getAllOrders() {
@@ -70,13 +102,13 @@ public class OrderController {
             Iterable<Order> orders = orderService.getAllOrders();
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            logger.error("Error while fetching orders", e);
+            logger.error("Error while fetching all orders", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     /**
-     * Test S3 bucket integration
+     * Test endpoint to verify S3 bucket integration
      */
     @GetMapping("/test-s3")
     public ResponseEntity<String> testS3Integration() {

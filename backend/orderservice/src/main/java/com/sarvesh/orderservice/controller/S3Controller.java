@@ -24,33 +24,39 @@ public class S3Controller {
     }
 
     /**
-     * Upload a file to the configured S3 bucket.
+     * Uploads a file to the configured S3 bucket.
      *
-     * @param file the multipart file to upload
-     * @return ResponseEntity with upload status and S3 key
+     * @param file Multipart file received from the client
+     * @return ResponseEntity with the status and uploaded file key
      */
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
-        logger.info("Upload request received for file: {}", file.getOriginalFilename());
+        String fileName = file.getOriginalFilename();
 
+        logger.info("📥 Upload request received for file: {}", fileName);
+
+        // Handle empty file case
         if (file.isEmpty()) {
-            logger.warn("Upload attempt with empty file.");
+            logger.warn("⚠️ Upload failed: Empty file submitted.");
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body("Upload failed: File is empty.");
+                    .body("❌ Upload failed: File is empty.");
         }
 
         try {
+            // Uploading to S3
             String key = s3Service.uploadFile(file);
-            logger.info("File uploaded successfully. S3 Key: {}", key);
+
+            logger.info("✅ File uploaded successfully. S3 Key: {}", key);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body("File uploaded successfully! S3 Key: " + key);
+                    .body("✅ File uploaded successfully. S3 key: " + key);
+
         } catch (Exception e) {
-            logger.error("Error uploading file to S3", e);
+            logger.error("❌ Error occurred while uploading to S3", e);
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Upload failed: " + e.getMessage());
+                    .body("❌ Upload failed: " + e.getMessage());
         }
     }
 }

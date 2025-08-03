@@ -26,8 +26,10 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 public class S3Service {
 
     private static final Logger logger = LoggerFactory.getLogger(S3Service.class);
+
     private S3Client s3Client;
 
+    // Inject region, endpoint, and bucket name from application properties
     @Value("${aws.region}")
     private String region;
 
@@ -37,33 +39,43 @@ public class S3Service {
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
+    /**
+     * Initializes the S3 client after the service is constructed.
+     * Connects to the LocalStack S3 endpoint with dummy credentials.
+     */
     @PostConstruct
     public void init() {
         try {
             logger.info("Initializing S3 client for region '{}' and endpoint '{}'", region, endpoint);
 
+            // Build the S3 client pointing to LocalStack
             this.s3Client = S3Client.builder()
-                    .endpointOverride(URI.create(endpoint))
+                    .endpointOverride(URI.create(endpoint)) // LocalStack URI (e.g. http://localhost:4566)
                     .region(Region.of(region))
                     .credentialsProvider(
                             StaticCredentialsProvider.create(
-                                    AwsBasicCredentials.create("test", "test")
+                                    AwsBasicCredentials.create("test", "test") // dummy creds for LocalStack
                             )
                     )
                     .serviceConfiguration(
                             S3Configuration.builder()
-                                    .pathStyleAccessEnabled(true)
+                                    .pathStyleAccessEnabled(true) // Required for LocalStack
                                     .build()
                     )
                     .build();
 
+            // Create the bucket if it doesn't already exist
             createBucketIfNotExists(bucketName);
+
         } catch (Exception e) {
             logger.error("Failed to initialize S3 client: {}", e.getMessage(), e);
             throw new RuntimeException("S3 client initialization failed", e);
         }
     }
 
+    /**
+     * Checks if the specified bucket exists, and creates it if not.
+     */
     public void createBucketIfNotExists(String bucketName) {
         try {
             s3Client.headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
@@ -85,7 +97,15 @@ public class S3Service {
         }
     }
 
+    /**
+     * Uploads the given file to S3 under a unique key.
+     *
+     * @param file MultipartFile to be uploaded
+     * @return Generated key used for the file in S3
+     * @throws IOException if upload fails
+     */
     public String uploadFile(MultipartFile file) throws IOException {
+        // Validate input
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File must not be null or empty");
         }
@@ -95,8 +115,10 @@ public class S3Service {
             throw new IllegalArgumentException("File must have a valid name");
         }
 
+        // Create a unique S3 key using UUID
         String key = UUID.randomUUID() + "_" + originalFilename;
 
+        // Prepare the PutObject request
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
@@ -104,6 +126,7 @@ public class S3Service {
                 .build();
 
         try {
+            // Upload to S3
             s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
             logger.info("File '{}' uploaded successfully to bucket '{}' with key '{}'", originalFilename, bucketName, key);
         } catch (S3Exception e) {

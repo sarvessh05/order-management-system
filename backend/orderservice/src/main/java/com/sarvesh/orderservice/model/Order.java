@@ -7,7 +7,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
 /**
- * Represents an Order stored in the DynamoDB "orders" table.
+ * Represents an order entry stored in the DynamoDB "Orders" table.
  */
 @DynamoDBTable(tableName = "Orders")
 public class Order {
@@ -19,8 +19,8 @@ public class Order {
     private Date createdAt;
 
     /**
-     * Gets the primary key for the Order item in DynamoDB.
-     * 
+     * Gets the unique identifier for the order.
+     *
      * @return the order ID
      */
     @DynamoDBHashKey(attributeName = "orderId")
@@ -34,8 +34,8 @@ public class Order {
 
     /**
      * Gets the name of the customer who placed the order.
-     * 
-     * @return the customer's name
+     *
+     * @return customer name
      */
     @DynamoDBAttribute(attributeName = "customerName")
     public String getCustomerName() {
@@ -48,8 +48,8 @@ public class Order {
 
     /**
      * Gets the total amount for the order.
-     * 
-     * @return the order amount
+     *
+     * @return order amount
      */
     @DynamoDBAttribute(attributeName = "amount")
     public Double getAmount() {
@@ -61,9 +61,9 @@ public class Order {
     }
 
     /**
-     * Gets the URL pointing to the invoice (likely stored in S3).
-     * 
-     * @return the invoice URL
+     * Gets the URL pointing to the uploaded invoice (typically stored in S3).
+     *
+     * @return invoice URL
      */
     @DynamoDBAttribute(attributeName = "invoiceUrl")
     public String getInvoiceUrl() {
@@ -76,8 +76,8 @@ public class Order {
 
     /**
      * Gets the timestamp indicating when the order was created.
-     * 
-     * @return the creation date
+     *
+     * @return creation date
      */
     @DynamoDBAttribute(attributeName = "createdAt")
     public Date getCreatedAt() {
@@ -89,7 +89,9 @@ public class Order {
     }
 
     /**
-     * Returns a string representation of the order.
+     * Returns a readable string representation of the order.
+     *
+     * @return order details
      */
     @Override
     public String toString() {
