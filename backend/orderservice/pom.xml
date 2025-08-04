@@ -117,6 +117,13 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+</dependency>
+
+
         <!-- 🧪 Optional: JUnit Jupiter (explicit if you want separate control) -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -124,6 +131,13 @@
             <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- SNS -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sns</artifactId>
+        </dependency>
+
     </dependencies>
 
     <!-- 🔨 Spring Boot Plugin for building executable jars -->

@@ -15,13 +15,11 @@ public class Order {
     private String orderId;
     private String customerName;
     private Double amount;
-    private String invoiceUrl;
+    private String invoiceUrl;  // URL or S3 key of the uploaded invoice
     private Date createdAt;
 
-    /**
-     * Gets the unique identifier for the order.
-     *
-     * @return the order ID
+    /** 
+     * Primary key for the order.
      */
     @DynamoDBHashKey(attributeName = "orderId")
     public String getOrderId() {
@@ -32,10 +30,8 @@ public class Order {
         this.orderId = orderId;
     }
 
-    /**
-     * Gets the name of the customer who placed the order.
-     *
-     * @return customer name
+    /** 
+     * Customer name associated with the order.
      */
     @DynamoDBAttribute(attributeName = "customerName")
     public String getCustomerName() {
@@ -46,10 +42,8 @@ public class Order {
         this.customerName = customerName;
     }
 
-    /**
-     * Gets the total amount for the order.
-     *
-     * @return order amount
+    /** 
+     * Amount paid for the order.
      */
     @DynamoDBAttribute(attributeName = "amount")
     public Double getAmount() {
@@ -61,9 +55,7 @@ public class Order {
     }
 
     /**
-     * Gets the URL pointing to the uploaded invoice (typically stored in S3).
-     *
-     * @return invoice URL
+     * URL or identifier pointing to the invoice stored in S3.
      */
     @DynamoDBAttribute(attributeName = "invoiceUrl")
     public String getInvoiceUrl() {
@@ -74,10 +66,8 @@ public class Order {
         this.invoiceUrl = invoiceUrl;
     }
 
-    /**
-     * Gets the timestamp indicating when the order was created.
-     *
-     * @return creation date
+    /** 
+     * Timestamp when the order was created.
      */
     @DynamoDBAttribute(attributeName = "createdAt")
     public Date getCreatedAt() {
@@ -88,11 +78,6 @@ public class Order {
         this.createdAt = createdAt;
     }
 
-    /**
-     * Returns a readable string representation of the order.
-     *
-     * @return order details
-     */
     @Override
     public String toString() {
         return "Order{" +
