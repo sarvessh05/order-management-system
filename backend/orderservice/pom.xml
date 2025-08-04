@@ -6,7 +6,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- 🔼 Inherit Spring Boot 3.2.4 defaults -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -21,7 +20,6 @@
     <description>A real-time order management backend</description>
     <url>https://github.com/sarvessh05/orderservice</url>
 
-    <!-- 📄 License & Developer Info -->
     <licenses>
         <license>
             <name>MIT License</name>
@@ -46,11 +44,10 @@
     </scm>
 
     <properties>
-        <!-- ☕ Using Java 21 -->
         <java.version>21</java.version>
     </properties>
 
-    <!-- 🔁 JitPack for community dependencies like spring-data-dynamodb -->
+    <!-- 🔁 Community Repository (for spring-data-dynamodb) -->
     <repositories>
         <repository>
             <id>jitpack.io</id>
@@ -58,7 +55,7 @@
         </repository>
     </repositories>
 
-    <!-- 📦 AWS SDK BOM for consistent SDK v2 versions -->
+    <!-- 📦 AWS SDK BOM (Bill of Materials) -->
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -72,59 +69,56 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- 🚀 Web API Support -->
+        <!-- 🌐 Spring Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- ✅ Spring Boot Core Starter (used for application context, config, etc.) -->
+        <!-- ⚙ Spring Core -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- 📦 AWS SDK v2 - S3 -->
+        <!-- ☁ AWS SDK (No version needed due to BOM) -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
         </dependency>
-
-        <!-- 📦 AWS SDK v2 - DynamoDB -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>dynamodb</artifactId>
         </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sqs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sns</artifactId>
+        </dependency>
 
-        <!-- 💾 Spring Data DynamoDB (Community maintained) -->
+        <!-- 📊 Spring Data DynamoDB -->
         <dependency>
             <groupId>com.github.derjust</groupId>
             <artifactId>spring-data-dynamodb</artifactId>
             <version>5.1.0</version>
         </dependency>
 
-        <!-- ✅ Jakarta Annotation API -->
+        <!-- 🔖 Jakarta Annotations -->
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
             <version>2.1.1</version>
         </dependency>
 
-        <!-- 🧪 Testing: Spring Boot Starter Test (includes JUnit Jupiter, Mockito, etc.) -->
+        <!-- ✅ Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-</dependency>
-
-
-        <!-- 🧪 Optional: JUnit Jupiter (explicit if you want separate control) -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -132,15 +126,14 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- SNS -->
+        <!-- ✨ Lombok -->
         <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>sns</artifactId>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
-
     </dependencies>
 
-    <!-- 🔨 Spring Boot Plugin for building executable jars -->
     <build>
         <plugins>
             <plugin>
